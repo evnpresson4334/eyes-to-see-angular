@@ -26,14 +26,10 @@ import { NavigationComponent } from './components/navigation/navigation.componen
           @if (state.currentIndex() === 0) {
             <button class="book-selector" (click)="showBookSelector = true">
               <h1>{{ state.selectedBook().name }}</h1>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              <span class="material-icons">arrow_drop_down</span>
             </button>
-          } @else if (state.currentIndex() === 1) {
-            <h1>Search</h1>
           } @else {
-            <h1>Bookmarks</h1>
+            <h1>{{ getPageTitle() }}</h1>
           }
         } @else {
           <h1>Settings</h1>
@@ -42,25 +38,51 @@ import { NavigationComponent } from './components/navigation/navigation.componen
         <div class="header-actions">
           @if (!state.isOnline()) {
             <span class="offline-badge">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-                <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                <line x1="12" y1="20" x2="12.01" y2="20"></line>
-              </svg>
+              <span class="material-icons">wifi_off</span>
+              <span>Offline</span>
             </span>
           }
           <button class="settings-btn" (click)="openSettings()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+            <span class="material-icons">settings</span>
           </button>
         </div>
       </header>
+
+      <!-- Desktop Top Navigation -->
+      @if (isDesktop && state.currentIndex() < 3) {
+        <nav class="desktop-nav">
+          <button 
+            [class.active]="state.currentIndex() === 0" 
+            (click)="onNavigate(0)"
+          >
+            <span class="material-icons">menu_book</span>
+            Read
+          </button>
+          <button 
+            [class.active]="state.currentIndex() === 1" 
+            (click)="onNavigate(1)"
+          >
+            <span class="material-icons">search</span>
+            Search
+          </button>
+          <button 
+            [class.active]="state.currentIndex() === 2" 
+            (click)="onNavigate(2)"
+          >
+            <span class="material-icons">bookmark</span>
+            Bookmarks
+          </button>
+        </nav>
+      }
+
+      <!-- Main Content -->
+      <main class="main-content">
+        @switch (state.currentIndex()) {
+          @case (0) { <app-reading /> }
+          @case (1) { <app-search /> }
+          @case (2) { <app-bookmarks /> }
+        }
+      </main>
 
       <!-- Book Selector Modal -->
       @if (showBookSelector) {
@@ -83,32 +105,20 @@ import { NavigationComponent } from './components/navigation/navigation.componen
         </div>
       }
 
-      <!-- Main Content -->
-      <main class="main-content">
-        @switch (state.currentIndex()) {
-          @case (0) { <app-reading /> }
-          @case (1) { <app-search /> }
-          @case (2) { <app-bookmarks /> }
-        }
-      </main>
-
       <!-- Settings Panel -->
       @if (showSettings) {
         <div class="settings-overlay" (click)="showSettings = false">
           <div class="settings-panel" (click)="$event.stopPropagation()">
             <app-settings />
             <button class="close-settings" (click)="showSettings = false">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <span class="material-icons">close</span>
             </button>
           </div>
         </div>
       }
 
-      <!-- Bottom Navigation -->
-      @if (state.currentIndex() < 3) {
+      <!-- Mobile Bottom Navigation -->
+      @if (!isDesktop && state.currentIndex() < 3) {
         <app-navigation (navigate)="onNavigate($event)" />
       }
     </div>
@@ -133,7 +143,7 @@ import { NavigationComponent } from './components/navigation/navigation.componen
     .book-selector {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
       background: none;
       border: none;
       cursor: pointer;
@@ -144,6 +154,9 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       font-size: 1.25em;
       margin: 0;
       font-weight: 600;
+    }
+    .book-selector .material-icons {
+      font-size: 20px;
     }
     .app-header h1 {
       font-size: 1.25em;
@@ -156,7 +169,17 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       gap: 12px;
     }
     .offline-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(231, 76, 60, 0.15);
       color: #e74c3c;
+      border-radius: 6px;
+      font-size: 0.85em;
+    }
+    .offline-badge .material-icons {
+      font-size: 16px;
     }
     .settings-btn {
       background: none;
@@ -165,7 +188,42 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       cursor: pointer;
       padding: 4px;
     }
+    .settings-btn .material-icons {
+      font-size: 22px;
+    }
+    .desktop-nav {
+      display: flex;
+      gap: 4px;
+      padding: 8px 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .desktop-nav button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+    .desktop-nav button:hover {
+      background: var(--bg);
+    }
+    .desktop-nav button.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .desktop-nav .material-icons {
+      font-size: 20px;
+    }
     .main-content {
+      flex: 1;
       padding-bottom: 80px;
     }
     .modal-overlay {
@@ -260,6 +318,11 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       cursor: pointer;
       z-index: 10;
     }
+    @media (min-width: 769px) {
+      .main-content {
+        padding-bottom: 20px;
+      }
+    }
   `]
 })
 export class AppComponent implements OnInit {
@@ -267,18 +330,37 @@ export class AppComponent implements OnInit {
   showBookSelector = false;
   showSettings = false;
   books = this.state.dataService.books;
+  isDesktop = false;
 
   constructor() {
     effect(() => {
       const mode = this.state.themeMode();
       document.documentElement.setAttribute('data-theme', mode);
     });
+    this.checkScreenSize();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', () => this.checkScreenSize());
+    }
   }
 
   ngOnInit(): void {
     const mode = this.state.themeMode();
     document.documentElement.setAttribute('data-theme', mode);
     this.state.loadChapter();
+  }
+
+  checkScreenSize(): void {
+    if (typeof window !== 'undefined') {
+      this.isDesktop = window.innerWidth >= 768;
+    }
+  }
+
+  getPageTitle(): string {
+    switch (this.state.currentIndex()) {
+      case 1: return 'Search';
+      case 2: return 'Bookmarks';
+      default: return 'Read';
+    }
   }
 
   onNavigate(index: number): void {

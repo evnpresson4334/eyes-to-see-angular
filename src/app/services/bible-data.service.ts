@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, forkJoin } from 'rxjs';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import {
   BibleVerse,
   BibleBook,
@@ -9,7 +9,6 @@ import {
   Bookmark,
   ReadingProgress,
   ALL_BIBLE_BOOKS,
-  DEFAULT_TRANSLATIONS,
   usfmToBollsId,
   verseFromJson,
   translationFromJson,
@@ -24,6 +23,7 @@ import {
 })
 export class BibleDataService {
   private readonly API_BASE = 'https://bolls.life';
+  private readonly CORS_PROXY = 'https://corsproxy.io/?';
   private readonly STORAGE_KEYS = {
     TRANSLATIONS: 'cached_translations',
     BOOKMARKS: 'bookmarks',
@@ -40,6 +40,8 @@ export class BibleDataService {
   private translationsCache: BibleTranslation[] = [];
   private chapterCache: Map<string, BibleVerse[]> = new Map();
   private downloadedChapters: Set<string> = new Set();
+  private translationsLoading = false;
+  private translationsLoaded = false;
 
   readonly isOnline = signal(true);
   readonly books: BibleBook[] = ALL_BIBLE_BOOKS;
@@ -70,43 +72,77 @@ export class BibleDataService {
     if (this.translationsCache.length > 0) {
       return this.translationsCache;
     }
+    
     const cached = localStorage.getItem(this.STORAGE_KEYS.TRANSLATIONS);
     if (cached) {
       try {
-        this.translationsCache = JSON.parse(cached);
-        return this.translationsCache;
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.length > 0) {
+          this.translationsCache = parsed;
+          return this.translationsCache;
+        }
       } catch (e) {
         console.error('Error parsing cached translations:', e);
       }
     }
-    return DEFAULT_TRANSLATIONS;
+    
+    return [{ id: 'KJV', name: 'King James Version', abbreviation: 'KJV', language: 'English', isDefault: true }];
+  }
+
+  getEnglishTranslations(): BibleTranslation[] {
+    return this.getTranslations().filter(t => t.language === 'English');
   }
 
   fetchTranslations(): Observable<BibleTranslation[]> {
+    if (this.translationsLoading) {
+      return of(this.translationsCache);
+    }
+    
+    this.translationsLoading = true;
+
     if (!this.isOnline()) {
-      return of(DEFAULT_TRANSLATIONS);
+      this.translationsLoading = false;
+      const cached = this.getTranslations();
+      return of(cached.length > 0 ? cached : []);
     }
 
-    return this.http.get<any[]>(`${this.API_BASE}/static/bolls/app/views/languages.json`).pipe(
+    return this.http.get<any[]>(`${this.CORS_PROXY}${encodeURIComponent(`${this.API_BASE}/static/bolls/app/views/languages.json`)}`).pipe(
       map(languages => {
         const translations: BibleTranslation[] = [];
         
         for (const langData of languages) {
-          if (langData.language !== 'English') continue;
+          const langName = langData.language?.toString() || 'Unknown';
+          
+          // Only include English translations
+          if (!langName.toLowerCase().includes('english')) {
+            continue;
+          }
           
           for (const trans of langData.translations || []) {
             translations.push(translationFromJson(trans, 'English'));
           }
         }
         
+        // Sort alphabetically by abbreviation
+        translations.sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+        
         if (translations.length > 0) {
           this.translationsCache = translations;
+          this.translationsLoaded = true;
           localStorage.setItem(this.STORAGE_KEYS.TRANSLATIONS, JSON.stringify(translations));
         }
         
-        return translations.length > 0 ? translations : DEFAULT_TRANSLATIONS;
+        return translations;
       }),
-      catchError(() => of(DEFAULT_TRANSLATIONS))
+      catchError((error) => {
+        console.error('Error fetching translations:', error);
+        this.translationsLoading = false;
+        const cached = this.getTranslations();
+        return of(cached);
+      }),
+      tap(() => {
+        this.translationsLoading = false;
+      })
     );
   }
 
@@ -131,7 +167,7 @@ export class BibleDataService {
     }
 
     const bollsId = usfmToBollsId(bookId);
-    return this.http.get<any[]>(`${this.API_BASE}/get-text/${translationId}/${bollsId}/${chapter}/`).pipe(
+    return this.http.get<any[]>(`${this.CORS_PROXY}${encodeURIComponent(`${this.API_BASE}/get-text/${translationId}/${bollsId}/${chapter}/`)}`).pipe(
       map(data => {
         const verses = data.map(v => verseFromJson(v, chapter));
         this.chapterCache.set(cacheKey, verses);
@@ -147,21 +183,64 @@ export class BibleDataService {
     translationIds: string[]
   ): Observable<BibleVerse[]> {
     if (translationIds.length === 0) return of([]);
+    if (translationIds.length === 1) {
+      return this.getChapter(translationIds[0], bookId, chapter).pipe(
+        map(verses => verses.map(v => ({ 
+          ...v, 
+          translations: { [translationIds[0]]: v.text },
+          text: v.text 
+        })))
+      );
+    }
 
-    return this.getChapter(translationIds[0], bookId, chapter).pipe(
-      map(baseVerses => {
-        if (translationIds.length === 1) return baseVerses;
+    // Fetch all translations in parallel and merge
+    const requests = translationIds.map(translationId => {
+      const bollsId = usfmToBollsId(bookId);
+      return this.http.get<any[]>(`${this.CORS_PROXY}${encodeURIComponent(`${this.API_BASE}/get-text/${translationId}/${bollsId}/${chapter}/`)}`).pipe(
+        map(data => ({
+          translationId,
+          verses: data.map(v => ({ verse: v.verse, text: (v.text || '').replace(/<[^>]*>/g, '') }))
+        })),
+        catchError(() => of({ translationId, verses: [] }))
+      );
+    });
 
-        return baseVerses.map(baseVerse => {
-          const translations: { [key: string]: string } = {};
-          translations[translationIds[0]] = baseVerse.text;
-          
-          return {
-            ...baseVerse,
-            translations
-          };
+    return forkJoin(requests).pipe(
+      map(results => {
+        // Find the maximum number of verses
+        let maxVerses = 0;
+        results.forEach(r => {
+          if (r.verses.length > maxVerses) maxVerses = r.verses.length;
         });
-      })
+
+        // Build merged verses
+        const mergedVerses: BibleVerse[] = [];
+        
+        for (let v = 1; v <= maxVerses; v++) {
+          const translations: { [key: string]: string } = {};
+          let primaryText = '';
+          
+          results.forEach(r => {
+            const verseData = r.verses.find((vv: any) => vv.verse === v);
+            if (verseData) {
+              translations[r.translationId] = verseData.text;
+              if (r.translationId === translationIds[0]) {
+                primaryText = verseData.text;
+              }
+            }
+          });
+
+          mergedVerses.push({
+            chapter,
+            verseNumber: v,
+            text: primaryText,
+            translations
+          });
+        }
+
+        return mergedVerses;
+      }),
+      catchError(() => of([]))
     );
   }
 
@@ -178,7 +257,7 @@ export class BibleDataService {
       limit: '50'
     });
 
-    return this.http.get<any>(`${this.API_BASE}/v2/find/${translationId}?${params}`).pipe(
+    return this.http.get<any>(`${this.CORS_PROXY}${encodeURIComponent(`${this.API_BASE}/v2/find/${translationId}?${params}`)}`).pipe(
       map(response => {
         const results = (response.results || []).map((r: any) => {
           const book = ALL_BIBLE_BOOKS.find(b => b.bollsBookId === r.book) || ALL_BIBLE_BOOKS[0];

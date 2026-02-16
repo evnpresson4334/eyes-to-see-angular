@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppStateService } from '../../services';
@@ -9,45 +9,49 @@ import { AppStateService } from '../../services';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="search-container">
-      <div class="search-box">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input 
-          type="text" 
-          placeholder="Search the Bible..." 
-          [(ngModel)]="query"
-          (keyup.enter)="search()"
-        >
-        <button *ngIf="query" (click)="clearSearch()" class="clear-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+      <!-- Search Controls -->
+      <div class="search-controls">
+        <div class="search-box">
+          <span class="material-icons search-icon">search</span>
+          <input 
+            type="text" 
+            placeholder="Search the Bible..." 
+            [(ngModel)]="query"
+            (keyup.enter)="search()"
+          >
+          <button *ngIf="query" (click)="clearSearch()" class="clear-btn">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="translation-selector">
+          <label>Search in:</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="selectedSearchTranslation" (ngModelChange)="onTranslationChange()">
+              @for (trans of sortedTranslations(); track trans.id) {
+                <option [value]="trans.id">{{ trans.name }} ({{ trans.abbreviation }})</option>
+              }
+            </select>
+            <span class="material-icons select-arrow">arrow_drop_down</span>
+          </div>
+        </div>
       </div>
 
       @if (!state.isOnline()) {
         <div class="offline-notice">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-            <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-            <line x1="12" y1="20" x2="12.01" y2="20"></line>
-          </svg>
+          <span class="material-icons">wifi_off</span>
           Search requires internet connection
         </div>
       }
 
       @if (searching()) {
-        <div class="loading">Searching...</div>
+        <div class="loading">
+          <div class="spinner"></div>
+          Searching...
+        </div>
       } @else if (results().length > 0) {
         <div class="results-info">
-          Found {{ totalResults() }} results
+          Found {{ totalResults() }} results in {{ getTranslationName() }}
         </div>
         <div class="results-list">
           @for (result of results(); track result.reference) {
@@ -59,6 +63,7 @@ import { AppStateService } from '../../services';
         </div>
       } @else if (query && hasSearched()) {
         <div class="no-results">
+          <span class="material-icons">search_off</span>
           <p>No verses found for "{{ query }}"</p>
         </div>
       }
@@ -70,6 +75,12 @@ import { AppStateService } from '../../services';
       max-width: 700px;
       margin: 0 auto;
     }
+    .search-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
     .search-box {
       display: flex;
       align-items: center;
@@ -79,7 +90,7 @@ import { AppStateService } from '../../services';
       border-radius: 8px;
       border: 1px solid var(--border);
     }
-    .search-box svg {
+    .search-icon {
       color: var(--text-secondary);
       flex-shrink: 0;
     }
@@ -100,6 +111,45 @@ import { AppStateService } from '../../services';
       color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
+      display: flex;
+      align-items: center;
+    }
+    .clear-btn .material-icons {
+      font-size: 20px;
+    }
+    .translation-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .translation-selector label {
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      max-width: 300px;
+    }
+    .select-wrapper select {
+      width: 100%;
+      padding: 10px 36px 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      font-size: 0.9em;
+      cursor: pointer;
+      appearance: none;
+    }
+    .select-arrow {
+      position: absolute;
+      right: 8px;
+      pointer-events: none;
+      color: var(--text-secondary);
     }
     .offline-notice {
       display: flex;
@@ -112,10 +162,27 @@ import { AppStateService } from '../../services';
       border-radius: 6px;
       font-size: 0.9em;
     }
-    .loading, .no-results {
-      text-align: center;
+    .offline-notice .material-icons {
+      font-size: 18px;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       padding: 40px;
       color: var(--text-secondary);
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     .results-info {
       margin: 16px 0;
@@ -148,15 +215,48 @@ import { AppStateService } from '../../services';
       line-height: 1.6;
       font-size: 0.95em;
     }
+    .no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+      gap: 12px;
+    }
+    .no-results .material-icons {
+      font-size: 48px;
+      opacity: 0.5;
+    }
   `]
 })
-export class SearchComponent {
+export class SearchComponent implements OnInit {
   state = inject(AppStateService);
   query = '';
+  selectedSearchTranslation = 'KJV';
   searching = signal(false);
   results = signal<any[]>([]);
   totalResults = signal(0);
   hasSearched = signal(false);
+
+  ngOnInit(): void {
+    // Default to the currently selected translation
+    this.selectedSearchTranslation = this.state.selectedTranslation();
+  }
+
+  sortedTranslations(): any[] {
+    return [...this.state.translations()].sort((a, b) => 
+      a.abbreviation.localeCompare(b.abbreviation)
+    );
+  }
+
+  getTranslationName(): string {
+    const trans = this.state.translations().find(t => t.id === this.selectedSearchTranslation);
+    return trans?.name || this.selectedSearchTranslation;
+  }
+
+  onTranslationChange(): void {
+    // Optionally save as default search translation
+  }
 
   search(): void {
     if (!this.query.trim()) return;
@@ -164,7 +264,7 @@ export class SearchComponent {
     this.searching.set(true);
     this.hasSearched.set(true);
     
-    this.state.dataService.searchVerses(this.query, this.state.selectedTranslation()).subscribe({
+    this.state.dataService.searchVerses(this.query, this.selectedSearchTranslation).subscribe({
       next: (response) => {
         this.results.set(response.results);
         this.totalResults.set(response.total);
@@ -188,6 +288,9 @@ export class SearchComponent {
   goToVerse(result: any): void {
     const bookIndex = this.state.dataService.books.findIndex(b => b.id === result.bookId);
     if (bookIndex !== -1) {
+      // Switch to the search translation for reading
+      this.state.setSelectedTranslation(this.selectedSearchTranslation);
+      this.state.setSelectedTranslations([this.selectedSearchTranslation]);
       this.state.setSelectedBook(bookIndex);
       this.state.setSelectedChapter(result.chapter);
       this.state.selectedVerses.set(new Set([result.verse]));

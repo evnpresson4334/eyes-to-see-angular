@@ -60,9 +60,22 @@ export class AppStateService {
   }
 
   private loadTranslations(): void {
-    this.translations.set(this.dataService.getTranslations());
-    this.dataService.fetchTranslations().subscribe(trans => {
-      this.translations.set(trans);
+    const cached = this.dataService.getTranslations();
+    if (cached.length > 0) {
+      this.translations.set(cached);
+    }
+    
+    this.dataService.fetchTranslations().subscribe({
+      next: (trans) => {
+        if (trans.length > 0) {
+          this.translations.set(trans);
+        }
+      },
+      error: () => {
+        if (cached.length === 0) {
+          this.translations.set([{ id: 'NASB', name: 'New American Standard Bible', abbreviation: 'NASB', language: 'English', isDefault: true }]);
+        }
+      }
     });
   }
 
@@ -125,6 +138,11 @@ export class AppStateService {
     return this.selectedTranslations().includes(id);
   }
 
+  setTranslationsOrder(order: string[]): void {
+    this.selectedTranslationsOrder.set(order);
+    this.dataService.setTranslationsOrder(order);
+  }
+
   toggleVerse(verseNumber: number): void {
     const current = new Set(this.selectedVerses());
     if (current.has(verseNumber)) {
@@ -137,6 +155,10 @@ export class AppStateService {
 
   clearVerseSelection(): void {
     this.selectedVerses.set(new Set());
+  }
+
+  setSelectedVerses(verses: Set<number>): void {
+    this.selectedVerses.set(verses);
   }
 
   setFontSize(size: number): void {
