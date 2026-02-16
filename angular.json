@@ -60,6 +60,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/eyes-to-see-angular/",
               "budgets": [
                 {
                   "type": "initial",
