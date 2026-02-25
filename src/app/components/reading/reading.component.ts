@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -13,6 +13,10 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
     <div class="reading-container">
       <!-- Controls Bar -->
       <div class="controls-bar">
+        <button class="nav-btn" (click)="goToPreviousChapter()" [disabled]="!hasPreviousChapter()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        
         <div class="control-group">
           <label class="control-label">Chapter:</label>
           <div class="select-wrapper">
@@ -24,6 +28,10 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
             <span class="material-icons select-arrow">arrow_drop_down</span>
           </div>
         </div>
+
+        <button class="nav-btn" (click)="goToNextChapter()" [disabled]="!hasNextChapter()">
+          <span class="material-icons">chevron_right</span>
+        </button>
 
         <div class="control-group">
           <label class="control-label">Verses:</label>
@@ -48,7 +56,7 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
 
       <!-- Verse Filter Dropdown -->
       @if (showVerseFilter) {
-        <div class="dropdown-panel">
+        <div class="dropdown-panel" (click)="$event.stopPropagation()">
           <div class="dropdown-header">
             <span>Filter Verses - {{ state.selectedBook().name }} {{ state.selectedChapter() }}</span>
             <div class="dropdown-actions">
@@ -83,7 +91,7 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
 
       <!-- Translation Filter Dropdown -->
       @if (showTranslationFilter) {
-        <div class="dropdown-panel translation-panel">
+        <div class="dropdown-panel translation-panel" (click)="$event.stopPropagation()">
           <div class="dropdown-header">
             <span>Select Bible Versions</span>
           </div>
@@ -163,12 +171,45 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
     .controls-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 12px;
       padding: 12px 16px;
       background: var(--card-bg);
       border-bottom: 1px solid var(--border);
       margin: -16px -16px 16px -16px;
       align-items: flex-end;
+      position: sticky;
+      top: 60px;
+      z-index: 100;
+    }
+    @media (max-width: 768px) {
+      .controls-bar {
+        top: 0;
+      }
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .nav-btn .material-icons {
+      font-size: 24px;
     }
     .control-group {
       display: flex;
@@ -411,6 +452,19 @@ export class ReadingComponent implements OnInit {
   showTranslationFilter = false;
   showReorder = false;
 
+  constructor(private elementRef: ElementRef) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-panel') && !target.closest('.filter-btn')) {
+      this.showVerseFilter = false;
+    }
+    if (!target.closest('.translation-panel') && !target.closest('.filter-btn')) {
+      this.showTranslationFilter = false;
+    }
+  }
+
   ngOnInit(): void {
     this.state.loadChapter();
   }
@@ -448,6 +502,27 @@ export class ReadingComponent implements OnInit {
 
   onChapterChange(chapter: number): void {
     this.state.setSelectedChapter(chapter);
+  }
+
+  hasPreviousChapter(): boolean {
+    return this.state.selectedChapter() > 1;
+  }
+
+  hasNextChapter(): boolean {
+    const book = this.state.selectedBook();
+    return this.state.selectedChapter() < book.totalChapters;
+  }
+
+  goToPreviousChapter(): void {
+    if (this.hasPreviousChapter()) {
+      this.state.setSelectedChapter(this.state.selectedChapter() - 1);
+    }
+  }
+
+  goToNextChapter(): void {
+    if (this.hasNextChapter()) {
+      this.state.setSelectedChapter(this.state.selectedChapter() + 1);
+    }
   }
 
   toggleVerse(verseNumber: number): void {
