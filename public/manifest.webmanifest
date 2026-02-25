@@ -2,8 +2,8 @@
   "name": "Eyes to See Bible",
   "short_name": "Eyes to See",
   "display": "standalone",
-  "scope": "./",
-  "start_url": "./",
+  "scope": "/eyes-to-see-angular/",
+  "start_url": "/eyes-to-see-angular/",
   "theme_color": "#1a1a2e",
   "background_color": "#1a1a2e",
   "description": "A professional Bible reading app with multiple translations",
@@ -56,6 +56,38 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "splash/splash-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "splash/splash-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "splash/splash-1242x2208.png",
+      "sizes": "1242x2208",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "splash/splash-1536x2048.png",
+      "sizes": "1536x2048",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "splash/splash-2048x2732.png",
+      "sizes": "2048x2732",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }

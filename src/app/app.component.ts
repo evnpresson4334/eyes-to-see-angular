@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SwUpdate } from '@angular/service-worker';
 import { AppStateService } from './services';
 import { ReadingComponent } from './components/reading/reading.component';
 import { BookmarksComponent } from './components/bookmarks/bookmarks.component';
@@ -125,6 +126,15 @@ import { DictionaryPanelComponent } from './components/dictionary-panel/dictiona
       <!-- Dictionary Panel -->
       @if (showDictionary) {
         <app-dictionary-panel [query]="dictionaryQuery" (close)="showDictionary = false" />
+      }
+
+      <!-- Update Available Notification -->
+      @if (updateAvailable) {
+        <div class="update-notification">
+          <span>A new version of Eyes to See is available</span>
+          <button class="update-btn" (click)="installUpdate()">Update Now</button>
+          <button class="dismiss-btn" (click)="dismissUpdate()">Dismiss</button>
+        </div>
       }
 
       <!-- Mobile Bottom Navigation -->
@@ -339,7 +349,58 @@ import { DictionaryPanelComponent } from './components/dictionary-panel/dictiona
       cursor: pointer;
       z-index: 10;
     }
+    .update-notification {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      background: var(--primary);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 60;
+      flex-wrap: wrap;
+    }
+    .update-notification span {
+      flex: 1;
+      min-width: 200px;
+    }
+    .update-btn {
+      background: white;
+      color: var(--primary);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .update-btn:hover {
+      opacity: 0.9;
+    }
+    .dismiss-btn {
+      background: transparent;
+      color: white;
+      border: 1px solid white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .dismiss-btn:hover {
+      opacity: 0.8;
+    }
     @media (min-width: 769px) {
+      .update-notification {
+        bottom: 20px;
+        right: 20px;
+        left: auto;
+        width: 400px;
+      }
       .main-content {
         padding-bottom: 20px;
       }
@@ -348,12 +409,14 @@ import { DictionaryPanelComponent } from './components/dictionary-panel/dictiona
 })
 export class AppComponent implements OnInit {
   state = inject(AppStateService);
+  swUpdate = inject(SwUpdate);
   showBookSelector = false;
   showSettings = false;
   showDictionary = false;
   dictionaryQuery = '';
   books = this.state.dataService.books;
   isDesktop = false;
+  updateAvailable = false;
 
   constructor() {
     effect(() => {
@@ -370,6 +433,26 @@ export class AppComponent implements OnInit {
     const mode = this.state.themeMode();
     document.documentElement.setAttribute('data-theme', mode);
     this.state.loadChapter();
+    this.setupServiceWorkerUpdates();
+  }
+
+  private setupServiceWorkerUpdates(): void {
+    if (!this.swUpdate.isEnabled) return;
+
+    // Check for updates when the app initializes
+    this.swUpdate.checkForUpdate();
+
+    // Check for updates every 6 hours
+    setInterval(() => {
+      this.swUpdate.checkForUpdate();
+    }, 6 * 60 * 60 * 1000);
+
+    // Notify user when update is available
+    this.swUpdate.versionUpdates.subscribe(event => {
+      if (event.type === 'VERSION_READY') {
+        this.updateAvailable = true;
+      }
+    });
   }
 
   checkScreenSize(): void {
@@ -406,5 +489,15 @@ export class AppComponent implements OnInit {
       this.dictionaryQuery = prefix + strongsNumber;
       this.showDictionary = true;
     }
+  }
+
+  installUpdate(): void {
+    this.swUpdate.activateUpdate().then(() => {
+      window.location.reload();
+    });
+  }
+
+  dismissUpdate(): void {
+    this.updateAvailable = false;
   }
 }
