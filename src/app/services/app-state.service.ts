@@ -47,6 +47,8 @@ export class AppStateService {
       if (idx !== -1) this.selectedBookIndex.set(idx);
       this.selectedChapter.set(progress.chapter);
       this.fontSize.set(progress.fontSize);
+      this.selectedTranslation.set(progress.translationId);
+      this.selectedTranslations.set([progress.translationId]);
     } else {
       this.selectedTranslation.set(this.dataService.getSelectedTranslation());
       this.selectedTranslations.set([this.dataService.getSelectedTranslation()]);
