@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eyes-to-See Logo Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    body.dark-theme {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #1a1a1a;
+    }
+
+    body.dark-theme h1 {
+      color: #e8e8e8;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+
+    body.dark-theme .subtitle {
+      color: #a0a0a0;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      background: #1e40af;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    body.dark-theme .theme-toggle {
+      background: #4f8cff;
+    }
+
+    body.dark-theme .theme-toggle:hover {
+      background: #60a5fa;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    body.dark-theme .card {
+      background: #16213e;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    body.dark-theme .card:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #1a1a1a;
+    }
+
+    body.dark-theme .card-title {
+      color: #e8e8e8;
+    }
+
+    .logo-showcase {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 2px solid #e0e0e0;
+    }
+
+    body.dark-theme .logo-showcase {
+      background: #0f1419;
+      border-color: #2a2a4a;
+    }
+
+    .logo-showcase img,
+    .logo-showcase svg {
+      max-width: 150px;
+      max-height: 150px;
+      width: auto;
+      height: auto;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    body.dark-theme .description {
+      color: #a0a0a0;
+    }
+
+    .usage-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e3f2fd;
+      color: #1e40af;
+      padding: 0.25rem 0.75rem;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    body.dark-theme .tag {
+      background: rgba(79, 140, 255, 0.2);
+      color: #60a5fa;
+    }
+
+    .size-grid {
+      margin-top: 3rem;
+      padding-top: 3rem;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    body.dark-theme .size-grid {
+      border-color: #2a2a4a;
+    }
+
+    .size-grid h2 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      color: #1a1a1a;
+    }
+
+    body.dark-theme .size-grid h2 {
+      color: #e8e8e8;
+    }
+
+    .sizes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .size-item {
+      text-align: center;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+    }
+
+    body.dark-theme .size-item {
+      background: #0f1419;
+      border-color: #2a2a4a;
+    }
+
+    .size-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 120px;
+      margin-bottom: 1rem;
+    }
+
+    .size-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .size-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    body.dark-theme .size-label {
+      color: #e8e8e8;
+    }
+
+    .theme-section {
+      margin-top: 3rem;
+      padding-top: 3rem;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    body.dark-theme .theme-section {
+      border-color: #2a2a4a;
+    }
+
+    .theme-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      color: #1a1a1a;
+    }
+
+    body.dark-theme .theme-section h2 {
+      color: #e8e8e8;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .theme-card {
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .theme-light {
+      background: white;
+      border: 2px solid #e0e0e0;
+    }
+
+    .theme-dark {
+      background: #16213e;
+      border: 2px solid #2a2a4a;
+    }
+
+    .theme-sepia {
+      background: #faf6eb;
+      border: 2px solid #d4c4a8;
+    }
+
+    .theme-high-contrast {
+      background: #000000;
+      border: 2px solid #ffffff;
+    }
+
+    .theme-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 150px;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+    }
+
+    .theme-preview img {
+      max-width: 120px;
+      max-height: 120px;
+    }
+
+    .theme-name {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .theme-light .theme-name {
+      color: #1a1a1a;
+    }
+
+    .theme-dark .theme-name {
+      color: #e8e8e8;
+    }
+
+    .theme-sepia .theme-name {
+      color: #5b4636;
+    }
+
+    .theme-high-contrast .theme-name {
+      color: #ffffff;
+    }
+
+    .color-info {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 2px solid #e0e0e0;
+      color: #666;
+    }
+
+    body.dark-theme .footer {
+      border-color: #2a2a4a;
+      color: #a0a0a0;
+    }
+
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    body.dark-theme .footer a {
+      color: #4f8cff;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Theme</button>
+
+  <div class="container">
+    <header>
+      <h1>👁️ Eyes-to-See Logo System</h1>
+      <p class="subtitle">Professional logo variants for Bible reading application</p>
+    </header>
+
+    <!-- Logo Variants Section -->
+    <div class="grid">
+      <!-- Primary Logo -->
+      <div class="card">
+        <h3 class="card-title">Primary Logo</h3>
+        <div class="logo-showcase">
+          <img src="logo.svg" alt="Primary Logo" />
+        </div>
+        <p class="description">
+          Detailed, expressive logo with concentric circles, light rays, and gradient effects. Perfect for large displays and marketing materials.
+        </p>
+        <div class="usage-tags">
+          <span class="tag">Headers</span>
+          <span class="tag">Marketing</span>
+          <span class="tag">100px+</span>
+          <span class="tag">Social Media</span>
+        </div>
+      </div>
+
+      <!-- Minimal Logo -->
+      <div class="card">
+        <h3 class="card-title">Minimal Logo</h3>
+        <div class="logo-showcase">
+          <img src="logo-minimal.svg" alt="Minimal Logo" />
+        </div>
+        <p class="description">
+          Balanced design with open book and light rays. Versatile and works across all applications with excellent clarity at all sizes.
+        </p>
+        <div class="usage-tags">
+          <span class="tag">Navigation</span>
+          <span class="tag">Buttons</span>
+          <span class="tag">64px+</span>
+          <span class="tag">Versatile</span>
+        </div>
+      </div>
+
+      <!-- Icon Logo -->
+      <div class="card">
+        <h3 class="card-title">Icon Logo</h3>
+        <div class="logo-showcase">
+          <img src="logo-icon.svg" alt="Icon Logo" />
+        </div>
+        <p class="description">
+          Compact, optimized for small sizes and favicons. Maintains visual impact and recognition even at 16px, perfect for app icons.
+        </p>
+        <div class="usage-tags">
+          <span class="tag">Favicon</span>
+          <span class="tag">App Icon</span>
+          <span class="tag">16-64px</span>
+          <span class="tag">Mobile</span>
+        </div>
+      </div>
+
+      <!-- Horizontal Logo -->
+      <div class="card">
+        <h3 class="card-title">Horizontal Logo</h3>
+        <div class="logo-showcase" style="min-height: 100px;">
+          <img src="logo-horizontal.svg" alt="Horizontal Logo" />
+        </div>
+        <p class="description">
+          Complete branding with integrated text and tagline. Professional and polished, ideal for headers, emails, and print materials.
+        </p>
+        <div class="usage-tags">
+          <span class="tag">Headers</span>
+          <span class="tag">Email</span>
+          <span class="tag">Print</span>
+          <span class="tag">300px+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Size Showcase -->
+    <div class="size-grid">
+      <h2>📏 Responsive Sizing</h2>
+      <p class="description" style="margin-bottom: 2rem;">
+        All logos scale perfectly from tiny favicon sizes to large displays without quality loss.
+      </p>
+      <div class="sizes">
+        <div class="size-item">
+          <div class="size-preview">
+            <img src="logo-icon.svg" alt="16px" style="width: 16px; height: 16px;" />
+          </div>
+          <div class="size-label">16px (Favicon)</div>
+        </div>
+        <div class="size-item">
+          <div class="size-preview">
+            <img src="logo-icon.svg" alt="32px" style="width: 32px; height: 32px;" />
+          </div>
+          <div class="size-label">32px (Icon)</div>
+        </div>
+        <div class="size-item">
+          <div class="size-preview">
+            <img src="logo-minimal.svg" alt="64px" style="width: 64px; height: 64px;" />
+          </div>
+          <div class="size-label">64px (Button)</div>
+        </div>
+        <div class="size-item">
+          <div class="size-preview">
+            <img src="logo.svg" alt="128px" style="width: 128px; height: 128px;" />
+          </div>
+          <div class="size-label">128px (Header)</div>
+        </div>
+        <div class="size-item">
+          <div class="size-preview">
+            <img src="logo.svg" alt="200px" style="width: 200px; height: 200px;" />
+          </div>
+          <div class="size-label">200px (Hero)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme Showcase -->
+    <div class="theme-section">
+      <h2>🎨 Theme Adaptation</h2>
+      <p class="description" style="margin-bottom: 2rem;">
+        Logos automatically adapt to your theme system. Click the theme toggle above to see them in action!
+      </p>
+      <div class="theme-grid">
+        <div class="theme-card theme-light">
+          <div class="theme-preview">
+            <img src="logo-minimal.svg" alt="Light Theme" />
+          </div>
+          <div class="theme-name">Light Theme</div>
+          <div class="color-info">#2563eb / #1e40af</div>
+        </div>
+        <div class="theme-card theme-dark">
+          <div class="theme-preview">
+            <img src="logo-minimal.svg" alt="Dark Theme" />
+          </div>
+          <div class="theme-name">Dark Theme</div>
+          <div class="color-info">#4f8cff / #60a5fa</div>
+        </div>
+        <div class="theme-card theme-sepia">
+          <div class="theme-preview">
+            <img src="logo-minimal.svg" alt="Sepia Theme" />
+          </div>
+          <div class="theme-name">Sepia Theme</div>
+          <div class="color-info">#8b4513 / #654321</div>
+        </div>
+        <div class="theme-card theme-high-contrast">
+          <div class="theme-preview">
+            <img src="logo-minimal.svg" alt="High Contrast" />
+          </div>
+          <div class="theme-name">High Contrast</div>
+          <div class="color-info">#00ff00 / #00cc00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        📖 Eyes-to-See Logo System v1.0 | 
+        ♿ WCAG AAA Accessible | 
+        📱 Fully Responsive | 
+        🎨 Theme-Aware
+      </p>
+      <p style="margin-top: 1rem; font-size: 0.85rem;">
+        For implementation details, see <strong>LOGO_IMPLEMENTATION.md</strong> | 
+        For design rationale, see <strong>LOGO_DESIGN_GUIDE.md</strong>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle functionality
+    function toggleTheme() {
+      const body = document.body;
+      const button = document.querySelector('.theme-toggle');
+      
+      if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        button.textContent = '🌙 Dark Theme';
+        localStorage.setItem('preview-theme', 'light');
+      } else {
+        body.classList.add('dark-theme');
+        button.textContent = '☀️ Light Theme';
+        localStorage.setItem('preview-theme', 'dark');
+      }
+    }
+
+    // Load saved theme preference
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('preview-theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.querySelector('.theme-toggle').textContent = '☀️ Light Theme';
+      }
+    }
+
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', loadTheme);
+  </script>
+</body>
+</html>

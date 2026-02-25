@@ -6,6 +6,7 @@ import { BookmarksComponent } from './components/bookmarks/bookmarks.component';
 import { SearchComponent } from './components/search/search.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { NavigationComponent } from './components/navigation/navigation.component';
+import { DictionaryPanelComponent } from './components/dictionary-panel/dictionary-panel.component';
 
 @Component({
   selector: 'app-root',
@@ -16,24 +17,28 @@ import { NavigationComponent } from './components/navigation/navigation.componen
     BookmarksComponent, 
     SearchComponent, 
     SettingsComponent,
-    NavigationComponent
+    NavigationComponent,
+    DictionaryPanelComponent
   ],
   template: `
     <div class="app-container" [attr.data-theme]="state.themeMode()" [class.high-contrast]="state.highContrast()">
       <!-- Header -->
       <header class="app-header">
-        @if (state.currentIndex() < 3) {
-          @if (state.currentIndex() === 0) {
-            <button class="book-selector" (click)="showBookSelector = true">
-              <h1>{{ state.selectedBook().name }}</h1>
-              <span class="material-icons">arrow_drop_down</span>
-            </button>
+        <div class="header-title">
+          <img src="logo-icon.svg" alt="Eyes to See" class="app-logo" />
+          @if (state.currentIndex() < 3) {
+            @if (state.currentIndex() === 0) {
+              <button class="book-selector" (click)="showBookSelector = true">
+                <h1>{{ state.selectedBook().name }}</h1>
+                <span class="material-icons">arrow_drop_down</span>
+              </button>
+            } @else {
+              <h1>{{ getPageTitle() }}</h1>
+            }
           } @else {
-            <h1>{{ getPageTitle() }}</h1>
+            <h1>Settings</h1>
           }
-        } @else {
-          <h1>Settings</h1>
-        }
+        </div>
 
         <div class="header-actions">
           @if (!state.isOnline()) {
@@ -78,7 +83,7 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       <!-- Main Content -->
       <main class="main-content">
         @switch (state.currentIndex()) {
-          @case (0) { <app-reading /> }
+          @case (0) { <app-reading (strongsNumberSelected)="onStrongsNumberSelected($event)" /> }
           @case (1) { <app-search /> }
           @case (2) { <app-bookmarks /> }
         }
@@ -117,6 +122,11 @@ import { NavigationComponent } from './components/navigation/navigation.componen
         </div>
       }
 
+      <!-- Dictionary Panel -->
+      @if (showDictionary) {
+        <app-dictionary-panel [query]="dictionaryQuery" (close)="showDictionary = false" />
+      }
+
       <!-- Mobile Bottom Navigation -->
       @if (!isDesktop && state.currentIndex() < 3) {
         <app-navigation (navigate)="onNavigate($event)" />
@@ -139,6 +149,17 @@ import { NavigationComponent } from './components/navigation/navigation.componen
       position: sticky;
       top: 0;
       z-index: 50;
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .app-logo {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
     }
     .book-selector {
       display: flex;
@@ -329,6 +350,8 @@ export class AppComponent implements OnInit {
   state = inject(AppStateService);
   showBookSelector = false;
   showSettings = false;
+  showDictionary = false;
+  dictionaryQuery = '';
   books = this.state.dataService.books;
   isDesktop = false;
 
@@ -374,5 +397,14 @@ export class AppComponent implements OnInit {
 
   openSettings(): void {
     this.showSettings = true;
+  }
+
+  onStrongsNumberSelected(strongsNumber: string): void {
+    if (strongsNumber) {
+      const isNewTestament = this.state.selectedBookIndex() >= 39;
+      const prefix = isNewTestament ? 'G' : 'H';
+      this.dictionaryQuery = prefix + strongsNumber;
+      this.showDictionary = true;
+    }
   }
 }

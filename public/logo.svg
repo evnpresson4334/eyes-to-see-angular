@@ -1,0 +1,106 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      
+      /* Light theme */
+      @media (prefers-color-scheme: light) {
+        .logo-primary { fill: #2563eb; }
+        .logo-accent { fill: #1e40af; }
+        .logo-light { fill: #dbeafe; }
+      }
+      
+      /* Dark theme */
+      @media (prefers-color-scheme: dark) {
+        .logo-primary { fill: #4f8cff; }
+        .logo-accent { fill: #60a5fa; }
+        .logo-light { fill: #1e3a8a; }
+      }
+      
+      /* Default (light) */
+      .logo-primary { fill: #2563eb; }
+      .logo-accent { fill: #1e40af; }
+      .logo-light { fill: #dbeafe; }
+    </style>
+    
+    <!-- Radial gradient for depth -->
+    <radialGradient id="glowGradient" cx="40%" cy="40%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:0.6" />
+    </radialGradient>
+    
+    <!-- Linear gradient for subtle dimension -->
+    <linearGradient id="depthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle (for app icon) -->
+  <circle cx="100" cy="100" r="100" fill="none" />
+  
+  <!-- Main concept: Abstract eye/lens with light rays representing insight -->
+  
+  <!-- Left lens (representing perception) -->
+  <g id="left-lens">
+    <!-- Outer ring -->
+    <circle cx="65" cy="85" r="28" class="logo-light" opacity="0.3"/>
+    
+    <!-- Middle ring -->
+    <circle cx="65" cy="85" r="22" fill="none" stroke="url(#depthGradient)" stroke-width="2" opacity="0.8"/>
+    
+    <!-- Inner core (iris) -->
+    <circle cx="65" cy="85" r="14" class="logo-primary"/>
+    
+    <!-- Pupil with gradient for depth -->
+    <circle cx="65" cy="85" r="8" fill="url(#glowGradient)"/>
+    
+    <!-- Highlight (light reflection) -->
+    <circle cx="62" cy="82" r="3" fill="white" opacity="0.7"/>
+  </g>
+  
+  <!-- Right lens (representing understanding) -->
+  <g id="right-lens">
+    <!-- Outer ring -->
+    <circle cx="135" cy="85" r="28" class="logo-light" opacity="0.3"/>
+    
+    <!-- Middle ring -->
+    <circle cx="135" cy="85" r="22" fill="none" stroke="url(#depthGradient)" stroke-width="2" opacity="0.8"/>
+    
+    <!-- Inner core (iris) -->
+    <circle cx="135" cy="85" r="14" class="logo-primary"/>
+    
+    <!-- Pupil with gradient for depth -->
+    <circle cx="135" cy="85" r="8" fill="url(#glowGradient)"/>
+    
+    <!-- Highlight (light reflection) -->
+    <circle cx="132" cy="82" r="3" fill="white" opacity="0.7"/>
+  </g>
+  
+  <!-- Connection line (representing insight/understanding flowing) -->
+  <line x1="93" y1="85" x2="107" y2="85" stroke="url(#depthGradient)" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Light rays below (representing illumination/wisdom radiating outward) -->
+  <g id="wisdom-rays" opacity="0.7">
+    <!-- Center ray -->
+    <line x1="100" y1="115" x2="100" y2="145" stroke="url(#depthGradient)" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Left ray -->
+    <line x1="75" y1="125" x2="55" y2="155" stroke="url(#depthGradient)" stroke-width="1.8" stroke-linecap="round"/>
+    
+    <!-- Right ray -->
+    <line x1="125" y1="125" x2="145" y2="155" stroke="url(#depthGradient)" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Subtle arc representing the book/scripture -->
+  <path d="M 65 115 Q 100 130 135 115" stroke="url(#depthGradient)" stroke-width="1.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+  
+  <!-- Decorative element: subtle dots suggesting text/knowledge -->
+  <g id="knowledge-marks" opacity="0.4">
+    <circle cx="50" cy="50" r="1.5" class="logo-accent"/>
+    <circle cx="150" cy="50" r="1.5" class="logo-accent"/>
+    <circle cx="100" cy="40" r="1.5" class="logo-accent"/>
+  </g>
+</svg>

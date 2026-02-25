@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, signal, HostListener, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -151,6 +151,7 @@ import { VerseCardComponent } from '../verse-card/verse-card.component';
               [selectedTranslationIds]="state.selectedTranslationsInOrder()"
               [translationMap]="translationMap"
               (toggleBookmark)="onToggleBookmark($event)"
+              (strongsNumberSelected)="onStrongsNumberSelected($event)"
             />
           } @empty {
             <div class="empty">
@@ -451,6 +452,7 @@ export class ReadingComponent implements OnInit {
   showVerseFilter = false;
   showTranslationFilter = false;
   showReorder = false;
+  @Output() strongsNumberSelected = new EventEmitter<string>();
 
   constructor(private elementRef: ElementRef) {}
 
@@ -578,5 +580,9 @@ export class ReadingComponent implements OnInit {
     } else {
       this.state.addBookmark(undefined, verseNumber);
     }
+  }
+
+  onStrongsNumberSelected(strongsNumber: string): void {
+    this.strongsNumberSelected.emit(strongsNumber);
   }
 }

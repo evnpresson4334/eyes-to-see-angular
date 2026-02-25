@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewEncapsulation, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BibleVerse } from '../../models';
 
@@ -6,6 +6,7 @@ import { BibleVerse } from '../../models';
   selector: 'app-verse-card',
   standalone: true,
   imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None,
   template: `
     <div class="verse-card">
       <div class="verse-header">
@@ -19,11 +20,11 @@ import { BibleVerse } from '../../models';
           @for (trans of translationEntries; track trans.id) {
             <div class="translation-block">
               <span class="translation-label">{{ trans.abbr }}</span>
-              <p class="verse-text">{{ cleanText(trans.text) }}</p>
+              <p class="verse-text" [innerHTML]="renderVerseText(trans.text)"></p>
             </div>
           }
         } @else {
-          <p class="verse-text">{{ cleanText(verse.text) }}</p>
+          <p class="verse-text" [innerHTML]="renderVerseText(verse.text)"></p>
         }
       </div>
       <button 
@@ -90,6 +91,27 @@ import { BibleVerse } from '../../models';
       line-height: 1.5;
       color: var(--text-primary);
     }
+    .verse-text .clickable-word {
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background-color 0.2s;
+    }
+    .verse-text .clickable-word:hover {
+      background-color: var(--primary-light);
+    }
+    .verse-text sup.clickable-word {
+      font-size: 0.6em;
+      vertical-align: super;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 2px;
+      border-radius: 2px;
+      transition: background-color 0.2s;
+    }
+    .verse-text sup.clickable-word:hover {
+      background-color: var(--primary-light);
+    }
     .bookmark-btn {
       position: absolute;
       top: 12px;
@@ -120,6 +142,40 @@ export class VerseCardComponent {
   @Input() selectedTranslationIds: string[] = [];
   @Input() translationMap: { [key: string]: string } = {};
   @Output() toggleBookmark = new EventEmitter<number>();
+  @Output() strongsNumberSelected = new EventEmitter<string>();
+
+  @HostListener('click', ['$event'])
+  onClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const clickableWord = target.closest('.clickable-word');
+    if (clickableWord) {
+      event.stopPropagation();
+      let word = clickableWord.getAttribute('data-word');
+      if (!word) {
+        word = clickableWord.getAttribute('data-strongs');
+      }
+      if (!word) {
+        const superscriptText = clickableWord.textContent || '';
+        word = this.fromSuperscript(superscriptText);
+      }
+      if (word && this.isValidStrongNumber(word)) {
+        this.strongsNumberSelected.emit(word);
+      }
+    }
+  }
+
+   private fromSuperscript(superscript: string): string {
+     const superscriptToDigit: { [key: string]: string } = {
+       '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+       '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9'
+     };
+     return superscript.split('').map(s => superscriptToDigit[s] || '').join('');
+   }
+
+  private isValidStrongNumber(text: string): boolean {
+    const n = parseInt(text, 10);
+    return !isNaN(n) && n >= 1 && n <= 9999;
+  }
 
   get hasMultipleTranslations(): boolean {
     const transIds = this.selectedTranslationIds || [];
@@ -166,5 +222,23 @@ export class VerseCardComponent {
       .replace(/&rsquo;/g, "'")
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  renderVerseText(text: string): string {
+    const cleaned = this.cleanText(text);
+    
+    const result = cleaned.replace(/([a-zA-Z]+)\s*(\d{3,5})/g, (match, word, number) => {
+      const superscript = this.toSuperscript(number);
+      return `${word}<sup class="clickable-word" data-word="${number}" data-strongs="${number}">${superscript}</sup>`;
+    });
+    return result;
+  }
+
+  private toSuperscript(num: string): string {
+    const superscripts: { [key: string]: string } = {
+      '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+      '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+    };
+    return num.split('').map(d => superscripts[d] || d).join('');
   }
 }
